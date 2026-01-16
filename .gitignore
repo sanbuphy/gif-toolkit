@@ -1,0 +1,95 @@
+# Rust
+/target/
+**/*.rs.bk
+*.pdb
+Cargo.lock
+
+# Keep Cargo.lock for library projects
+# !Cargo.lock
+
+# IDEs and Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+*.iml
+.rustup/
+.vscode/
+
+# Build artifacts
+*.exe
+*.dll
+*.dylib
+*.a
+*.lib
+# Keep source binaries
+# bin/
+obj/
+
+# Test artifacts
+tests/output/
+*.test.gif
+tests/fixtures/*.tmp
+
+# Distribution
+*.tar.gz
+*.zip
+*.dmg
+*.msi
+
+# Logs
+*.log
+
+# Environment
+.env
+.env.local
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# OS
+Thumbs.db
+Desktop.ini
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Coverage
+*.profraw
+*.profdata
+*.prof
+
+# Backup files
+*.bak
+*.backup
+*~.nib
+
+# Rust specific
+rustfmt.toml.backup
+
+# Documentation
+/doc/
+/docs/README.html
+
+# GitHub
+.vscode/
+.github/FUNDING.yml
+
+# Additional Rust tools
+# These are optional and can be removed if not used
+# rustfmt
+.rustfmt.toml
+
+# clippy
+.clippy.toml
+
+# diesel
+Diesel.toml
+
+# Other
+*.orig
+*.rej

@@ -1,0 +1,54 @@
+[package]
+name = "gif-toolkit"
+version = "0.1.0"
+edition = "2021"
+authors = ["Your Name <your.email@example.com>"]
+description = "A powerful cross-platform GIF optimization and manipulation toolkit"
+license = "MIT"
+repository = "https://github.com/yourusername/gif-toolkit"
+readme = "README.md"
+keywords = ["gif", "image", "optimization", "compression", "tool"]
+categories = ["command-line-utilities", "multimedia::images"]
+
+[dependencies]
+# CLI argument parsing
+clap = { version = "4.4", features = ["derive"] }
+
+# Image processing
+image = "0.24"
+gif = "0.12"
+
+# Error handling
+anyhow = "1.0"
+thiserror = "1.0"
+
+# Logging
+log = "0.4"
+env_logger = "0.10"
+
+# Progress bars
+indicatif = "0.17"
+
+# Parallel processing
+rayon = "1.7"
+
+# Color quantization for GIF compression
+color_quant = "1.1"
+
+[dev-dependencies]
+# Testing
+criterion = "0.5"
+
+[[bin]]
+name = "gif-toolkit"
+path = "src/main.rs"
+
+[[bin]]
+name = "test_gen"
+path = "src/bin/test_gen.rs"
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+strip = true
