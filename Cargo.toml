@@ -2,10 +2,10 @@
 name = "gif-toolkit"
 version = "0.1.0"
 edition = "2021"
-authors = ["Your Name <your.email@example.com>"]
+authors = ["sanbu <physicoada@gmail.com>"]
 description = "A powerful cross-platform GIF optimization and manipulation toolkit"
 license = "MIT"
-repository = "https://github.com/yourusername/gif-toolkit"
+repository = "https://github.com/sanbuphy/gif-toolkit"
 readme = "README.md"
 keywords = ["gif", "image", "optimization", "compression", "tool"]
 categories = ["command-line-utilities", "multimedia::images"]
