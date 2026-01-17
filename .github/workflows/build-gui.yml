@@ -43,16 +43,15 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         run: |
           sudo apt-get update
-          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.0-dev libappindicator3-dev librsvg2-dev patchelf
+          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
 
       - name: Install frontend dependencies
-        working-directory: ./src-tauri
         run: |
           cargo install tauri-cli --version "^1.0.0"
 
       - name: Build GUI
+        working-directory: ./src-tauri
         run: |
-          cd src-tauri
           cargo tauri build --target ${{ matrix.target }}
 
       - name: Prepare Linux artifacts
@@ -74,16 +73,20 @@ jobs:
       - name: Prepare macOS artifacts
         if: matrix.os == 'macos-latest'
         run: |
-          cd src-tauri/target/${{ matrix.target }}/release/bundle/dmg/
-          zip -r gif-toolkit-gui-macos-x64.zip *.dmg
+          cd src-tauri/target/${{ matrix.target }}/release/bundle/dmg
+          dmg_file=$(ls *.dmg | head -n 1)
+          zip -r "../../../gif-toolkit-gui-macos-x64.zip" "$dmg_file"
 
       - name: Upload GUI artifact
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.asset_name }}
           path: |
-            src-tauri/target/${{ matrix.target }}/release/bundle/*/*
             gif-toolkit-gui-*.*
+            src-tauri/target/${{ matrix.target }}/release/bundle/**/*.deb
+            src-tauri/target/${{ matrix.target }}/release/bundle/**/*.msi
+            src-tauri/target/${{ matrix.target }}/release/bundle/**/*.dmg
+          if-no-files-found: error
 
   release-gui:
     name: Create GUI Release
