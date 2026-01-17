@@ -1,5 +1,5 @@
 use anyhow::{Context, Result};
-use gif_toolkit::core::{Frame, Gif};
+use crate::core::{Frame, Gif};
 use std::fs;
 
 /// Compress GIF file size by the given percentage

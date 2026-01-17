@@ -1,5 +1,5 @@
 use anyhow::{Context, Result};
-use gif_toolkit::core::Gif;
+use crate::core::Gif;
 
 /// Adjust GIF playback speed by the given factor
 ///

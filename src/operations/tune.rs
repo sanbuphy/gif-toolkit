@@ -1,5 +1,5 @@
 use anyhow::{Context, Result};
-use gif_toolkit::core::Gif;
+use crate::core::Gif;
 use image::imageops::FilterType;
 
 /// Tune GIF parameters (resize, crop, etc.)

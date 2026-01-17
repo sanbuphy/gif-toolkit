@@ -1,5 +1,5 @@
 use anyhow::{Context, Result};
-use gif_toolkit::core::Gif;
+use crate::core::Gif;
 use std::fs;
 
 /// Display information about a GIF file
