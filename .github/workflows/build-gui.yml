@@ -57,18 +57,18 @@ jobs:
       - name: Prepare Linux artifacts
         if: matrix.os == 'ubuntu-latest'
         run: |
-          cd src-tauri/target/${{ matrix.target }}/release/bundle/deb/
+          cd src-tauri/target/${{ matrix.target }}/release/bundle/deb
           for deb in *.deb; do
             mv "$deb" "../"
           done
           cd ..
-          tar -czf gif-toolkit-gui-linux-x64.tar.gz *.deb
+          tar -czf ../../../gif-toolkit-gui-linux-x64.tar.gz *.deb
 
       - name: Prepare Windows artifacts
         if: matrix.os == 'windows-latest'
         run: |
-          cd src-tauri/target/${{ matrix.target }}/release/bundle/msi/
-          Compress-Archive -Path *.msi -DestinationPath gif-toolkit-gui-windows-x64.zip
+          cd src-tauri/target/${{ matrix.target }}/release/bundle/msi
+          Compress-Archive -Path *.msi -DestinationPath ../../../gif-toolkit-gui-windows-x64.zip
 
       - name: Prepare macOS artifacts
         if: matrix.os == 'macos-latest'
@@ -81,11 +81,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.asset_name }}
-          path: |
-            gif-toolkit-gui-*.*
-            src-tauri/target/${{ matrix.target }}/release/bundle/**/*.deb
-            src-tauri/target/${{ matrix.target }}/release/bundle/**/*.msi
-            src-tauri/target/${{ matrix.target }}/release/bundle/**/*.dmg
+          path: gif-toolkit-gui-*.*
           if-no-files-found: error
 
   release-gui:
