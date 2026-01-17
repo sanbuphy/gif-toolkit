@@ -137,10 +137,14 @@ impl Gif {
             // Ensure data is in RGBA format
             assert_eq!(data.len() % 4, 0, "Frame data should be RGBA");
 
+            // Use frame's actual dimensions (may differ from GIF dimensions)
+            let frame_width = frame_info.width;
+            let frame_height = frame_info.height;
+
             let frame = Frame {
                 data,
-                width,
-                height,
+                width: frame_width,
+                height: frame_height,
                 delay: frame_info.delay.max(1), // Ensure minimum delay of 1 (10ms)
                 transparent: frame_info.transparent.is_some(),
             };
@@ -188,12 +192,21 @@ impl Gif {
 
         // Write each frame
         for frame in &self.frames {
-            // Create GIF frame from RGBA data
-            let mut gif_frame =
-                GifFrame::from_rgba(frame.width, frame.height, &mut frame.data.clone());
+            // Create GIF frame from RGBA data using frame's actual dimensions
+            let mut gif_frame = GifFrame::from_rgba(
+                frame.width,
+                frame.height,
+                &mut frame.data.clone(),
+            );
 
             // Set delay and transparency
             gif_frame.delay = frame.delay.max(1); // Ensure minimum delay
+
+            // If frame is smaller than GIF, center it
+            if frame.width < self.width || frame.height < self.height {
+                gif_frame.top = (self.height - frame.height) / 2 as u16;
+                gif_frame.left = (self.width - frame.width) / 2 as u16;
+            }
 
             if frame.transparent {
                 gif_frame.transparent = Some(0);
