@@ -1,6 +1,94 @@
-use crate::core::Gif;
+use crate::core::{Frame, Gif};
 use anyhow::{Context, Result};
+use gif::DisposalMethod;
 use image::imageops::FilterType;
+use image::{ImageBuffer, Rgba};
+
+/// Normalize frames by compositing them with proper disposal handling
+///
+/// This is critical for GIFs with partial frames and Keep disposal.
+/// Each frame must be composited onto the previous frame's result.
+fn normalize_frames_composited(gif: &mut Gif) -> Result<()> {
+    if gif.frames.is_empty() {
+        return Ok(());
+    }
+
+    let full_frame_size = (gif.width as usize) * (gif.height as usize) * 4;
+
+    // Check if any frame needs normalization
+    let needs_normalization = gif.frames.iter().any(|f| f.data.len() < full_frame_size);
+
+    if !needs_normalization {
+        return Ok(());
+    }
+
+    println!("   Normalizing frames with composite disposal handling...");
+
+    // Get background color (transparent black by default for GIFs)
+    let mut canvas: Vec<u8> = vec![0; full_frame_size]; // Start with transparent black
+
+    for (i, frame) in gif.frames.iter_mut().enumerate() {
+        // Save current canvas state for disposal handling
+        let previous_canvas = canvas.clone();
+
+        // If this is a partial frame, composite it onto the canvas
+        if frame.data.len() < full_frame_size {
+            let frame_stride = (frame.width as usize) * 4;
+            let gif_stride = (gif.width as usize) * 4;
+
+            // Calculate offset to center the partial frame
+            let offset_x = ((gif.width - frame.width) / 2) as usize;
+            let offset_y = ((gif.height - frame.height) / 2) as usize;
+
+            for y in 0..(frame.height as usize) {
+                let frame_row_start = y * frame_stride;
+                let canvas_row_start = (offset_y * gif_stride) + (y * gif_stride);
+                let canvas_row_start_with_x = canvas_row_start + (offset_x * 4);
+
+                for x in 0..(frame.width as usize) {
+                    let pixel_offset = x * 4;
+                    let src_alpha = frame.data[frame_row_start + pixel_offset + 3];
+
+                    if src_alpha > 0 {
+                        // Composite pixel onto canvas (simple replace for now)
+                        for c in 0..4 {
+                            canvas[canvas_row_start_with_x + pixel_offset + c] =
+                                frame.data[frame_row_start + pixel_offset + c];
+                        }
+                    }
+                }
+            }
+
+            // Update frame with composited result
+            frame.data = canvas.clone();
+            frame.width = gif.width;
+            frame.height = gif.height;
+        } else {
+            // Full frame, replace canvas
+            canvas = frame.data.clone();
+        }
+
+        // Handle disposal for next frame
+        match frame.disposal {
+            DisposalMethod::Keep => {
+                // Keep current canvas for next frame (nothing to do)
+            }
+            DisposalMethod::Background => {
+                // Restore to background (transparent black)
+                canvas = vec![0; full_frame_size];
+            }
+            DisposalMethod::Previous => {
+                // Restore to previous state
+                canvas = previous_canvas;
+            }
+            _ => {
+                // Any/Other - treat as Keep
+            }
+        }
+    }
+
+    Ok(())
+}
 
 /// Tune GIF parameters (resize, crop, etc.)
 ///
@@ -55,6 +143,10 @@ pub fn run(input: &str, output: &str, width: Option<u32>, height: Option<u32>) -
     if new_width == 0 || new_height == 0 {
         anyhow::bail!("Invalid target dimensions: {}x{}", new_width, new_height);
     }
+
+    // CRITICAL: Normalize frames BEFORE resizing
+    // This ensures partial frames are properly composited
+    normalize_frames_composited(&mut gif)?;
 
     // Resize all frames
     for frame in &mut gif.frames {
