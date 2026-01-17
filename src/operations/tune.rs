@@ -1,5 +1,5 @@
-use anyhow::{Context, Result};
 use crate::core::Gif;
+use anyhow::{Context, Result};
 use image::imageops::FilterType;
 
 /// Tune GIF parameters (resize, crop, etc.)
@@ -27,8 +27,7 @@ pub fn run(input: &str, output: &str, width: Option<u32>, height: Option<u32>) -
     }
 
     // Load the GIF
-    let mut gif = Gif::from_file(input)
-        .context("Failed to load input GIF")?;
+    let mut gif = Gif::from_file(input).context("Failed to load input GIF")?;
 
     let original_width = gif.width as u32;
     let original_height = gif.height as u32;
@@ -60,12 +59,8 @@ pub fn run(input: &str, output: &str, width: Option<u32>, height: Option<u32>) -
     // Resize all frames
     for frame in &mut gif.frames {
         let img_buffer = frame.to_image_buffer();
-        let resized = image::imageops::resize(
-            &img_buffer,
-            new_width,
-            new_height,
-            FilterType::Lanczos3,
-        );
+        let resized =
+            image::imageops::resize(&img_buffer, new_width, new_height, FilterType::Lanczos3);
         frame.update_from_image_buffer(&resized);
     }
 
@@ -74,8 +69,7 @@ pub fn run(input: &str, output: &str, width: Option<u32>, height: Option<u32>) -
     gif.height = new_height as u16;
 
     // Save the modified GIF
-    gif.to_file(output)
-        .context("Failed to save output GIF")?;
+    gif.to_file(output).context("Failed to save output GIF")?;
 
     Ok(())
 }

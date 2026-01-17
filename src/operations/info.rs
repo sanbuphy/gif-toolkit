@@ -1,5 +1,5 @@
-use anyhow::{Context, Result};
 use crate::core::Gif;
+use anyhow::{Context, Result};
 use std::fs;
 
 /// Display information about a GIF file
@@ -15,12 +15,10 @@ use std::fs;
 /// ```
 pub fn run(input: &str) -> Result<()> {
     // Load the GIF
-    let gif = Gif::from_file(input)
-        .context("Failed to load GIF")?;
+    let gif = Gif::from_file(input).context("Failed to load GIF")?;
 
     // Get file size
-    let metadata = fs::metadata(input)
-        .context("Failed to read file metadata")?;
+    let metadata = fs::metadata(input).context("Failed to read file metadata")?;
     let file_size = metadata.len();
     let file_size_mb = file_size as f64 / (1024.0 * 1024.0);
 
@@ -33,7 +31,10 @@ pub fn run(input: &str) -> Result<()> {
     println!("  Size: {} bytes ({:.2} MB)", file_size, file_size_mb);
     println!("  Dimensions: {}x{} pixels", gif.width, gif.height);
     println!("  Frames: {}", gif.frame_count());
-    println!("  Duration: {:.2} seconds ({} centiseconds)", total_duration_sec, total_duration_cs);
+    println!(
+        "  Duration: {:.2} seconds ({} centiseconds)",
+        total_duration_sec, total_duration_cs
+    );
 
     // Calculate average frame delay
     if !gif.frames.is_empty() {
@@ -72,8 +73,6 @@ pub fn run(input: &str) -> Result<()> {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-
     #[test]
     fn test_info_display() {
         // This test requires a sample GIF file

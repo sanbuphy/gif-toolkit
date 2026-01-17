@@ -1,5 +1,5 @@
-use anyhow::{Context, Result};
 use crate::core::Gif;
+use anyhow::{Context, Result};
 
 /// Adjust GIF playback speed by the given factor
 ///
@@ -21,8 +21,7 @@ pub fn run(input: &str, output: &str, factor: f64) -> Result<()> {
     }
 
     // Load the GIF
-    let mut gif = Gif::from_file(input)
-        .context("Failed to load input GIF")?;
+    let mut gif = Gif::from_file(input).context("Failed to load input GIF")?;
 
     println!("   Input file: {}", input);
     println!("   Speed factor: {:.2}x", factor);
@@ -54,8 +53,7 @@ pub fn run(input: &str, output: &str, factor: f64) -> Result<()> {
     }
 
     // Save the modified GIF
-    gif.to_file(output)
-        .context("Failed to save output GIF")?;
+    gif.to_file(output).context("Failed to save output GIF")?;
 
     Ok(())
 }

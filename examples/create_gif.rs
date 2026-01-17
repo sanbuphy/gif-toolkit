@@ -28,10 +28,10 @@ fn main() -> anyhow::Result<()> {
 
         // Fill the frame with the calculated color
         for pixel in frame.data.chunks_exact_mut(4) {
-            pixel[0] = r;     // R
-            pixel[1] = g;     // G
-            pixel[2] = b;     // B
-            pixel[3] = 255;   // A (fully opaque)
+            pixel[0] = r; // R
+            pixel[1] = g; // G
+            pixel[2] = b; // B
+            pixel[3] = 255; // A (fully opaque)
         }
 
         // Set delay to 100ms (10 units of 10ms)

@@ -1,5 +1,5 @@
 use anyhow::Result;
-use clap::{Parser, Subcommand};
+use clap::Parser;
 use gif_toolkit::cli::{Args, Commands};
 use gif_toolkit::operations::{compress, info, speed, tune};
 

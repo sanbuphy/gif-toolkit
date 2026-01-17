@@ -49,15 +49,15 @@ impl Frame {
 
     /// Convert frame data to ImageBuffer for manipulation
     pub fn to_image_buffer(&self) -> image::ImageBuffer<image::Rgba<u8>, Vec<u8>> {
-        image::ImageBuffer::from_raw(
-            self.width as u32,
-            self.height as u32,
-            self.data.clone()
-        ).expect("Failed to create ImageBuffer from frame data")
+        image::ImageBuffer::from_raw(self.width as u32, self.height as u32, self.data.clone())
+            .expect("Failed to create ImageBuffer from frame data")
     }
 
     /// Update frame data from ImageBuffer
-    pub fn update_from_image_buffer(&mut self, buffer: &image::ImageBuffer<image::Rgba<u8>, Vec<u8>>) {
+    pub fn update_from_image_buffer(
+        &mut self,
+        buffer: &image::ImageBuffer<image::Rgba<u8>, Vec<u8>>,
+    ) {
         let (width, height) = buffer.dimensions();
         self.width = width as u16;
         self.height = height as u16;
@@ -95,8 +95,8 @@ impl Gif {
     /// Load a GIF from a file
     pub fn from_file(path: &str) -> Result<Self> {
         // Open the file
-        let file = File::open(path)
-            .with_context(|| format!("Failed to open GIF file: {}", path))?;
+        let file =
+            File::open(path).with_context(|| format!("Failed to open GIF file: {}", path))?;
         let mut reader = BufReader::new(file);
 
         // Configure decoder to output RGBA format
@@ -104,7 +104,8 @@ impl Gif {
         decoder_options.set_color_output(gif::ColorOutput::RGBA);
 
         // Create decoder and read info
-        let mut decoder = decoder_options.read_info(&mut reader)
+        let mut decoder = decoder_options
+            .read_info(&mut reader)
             .with_context(|| format!("Failed to read GIF header from: {}", path))?;
 
         // Get dimensions
@@ -113,7 +114,8 @@ impl Gif {
 
         // Read global palette if present
         let global_palette = decoder.global_palette().map(|palette| {
-            palette.chunks_exact(3)
+            palette
+                .chunks_exact(3)
                 .map(|chunk| {
                     let mut rgb = [0u8; 3];
                     rgb.copy_from_slice(chunk);
@@ -125,7 +127,8 @@ impl Gif {
         // Collect all frames
         let mut frames = Vec::new();
 
-        while let Some(frame_info) = decoder.read_next_frame()
+        while let Some(frame_info) = decoder
+            .read_next_frame()
             .with_context(|| format!("Failed to read frame from: {}", path))?
         {
             // Get RGBA data from the frame buffer
@@ -157,15 +160,13 @@ impl Gif {
     /// Save the GIF to a file
     pub fn to_file(&self, path: &str) -> Result<()> {
         // Create output file
-        let file = File::create(path)
-            .with_context(|| format!("Failed to create GIF file: {}", path))?;
+        let file =
+            File::create(path).with_context(|| format!("Failed to create GIF file: {}", path))?;
         let writer = BufWriter::new(file);
 
         // Prepare global palette (empty if none)
         let global_palette: Vec<u8> = if let Some(palette) = &self.global_palette {
-            palette.iter()
-                .flat_map(|rgb| rgb.iter().copied())
-                .collect()
+            palette.iter().flat_map(|rgb| rgb.iter().copied()).collect()
         } else {
             Vec::new()
         };
@@ -176,17 +177,20 @@ impl Gif {
 
         // Set loop count (0 = infinite)
         if self.loop_count == 0 {
-            encoder.set_repeat(Repeat::Infinite)
+            encoder
+                .set_repeat(Repeat::Infinite)
                 .context("Failed to set loop count")?;
         } else {
-            encoder.set_repeat(Repeat::Finite(self.loop_count))
+            encoder
+                .set_repeat(Repeat::Finite(self.loop_count))
                 .context("Failed to set loop count")?;
         }
 
         // Write each frame
         for frame in &self.frames {
             // Create GIF frame from RGBA data
-            let mut gif_frame = GifFrame::from_rgba(frame.width, frame.height, &mut frame.data.clone());
+            let mut gif_frame =
+                GifFrame::from_rgba(frame.width, frame.height, &mut frame.data.clone());
 
             // Set delay and transparency
             gif_frame.delay = frame.delay.max(1); // Ensure minimum delay
@@ -195,7 +199,8 @@ impl Gif {
                 gif_frame.transparent = Some(0);
             }
 
-            encoder.write_frame(&gif_frame)
+            encoder
+                .write_frame(&gif_frame)
                 .with_context(|| format!("Failed to write frame to: {}", path))?;
         }
 
@@ -219,9 +224,7 @@ impl Gif {
 
     /// Get total duration (in 10ms units)
     pub fn total_duration(&self) -> u32 {
-        self.frames.iter()
-            .map(|f| f.delay as u32)
-            .sum()
+        self.frames.iter().map(|f| f.delay as u32).sum()
     }
 }
 

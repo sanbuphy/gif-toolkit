@@ -1,5 +1,5 @@
-use anyhow::{Context, Result};
 use crate::core::{Frame, Gif};
+use anyhow::{Context, Result};
 use std::fs;
 
 /// Compress GIF file size by the given percentage
@@ -26,8 +26,7 @@ pub fn run(input: &str, output: &str, target_percent: u8) -> Result<()> {
     println!("   Compression target: {}%", target_percent);
 
     // Load the input GIF
-    let mut gif = Gif::from_file(input)
-        .context("Failed to load input GIF")?;
+    let mut gif = Gif::from_file(input).context("Failed to load input GIF")?;
 
     // Get original file size
     let original_size = fs::metadata(input)?.len();
@@ -37,44 +36,36 @@ pub fn run(input: &str, output: &str, target_percent: u8) -> Result<()> {
     println!("   Target size: {} bytes", target_size);
 
     // Apply iterative compression strategy
-    let compression_steps = [
-        // Step 1: Frame deduplication (threshold 10)
-        || deduplicate_frames(&mut gif, 10),
-        // Step 2: Reduce colors to 128
-        || reduce_colors(&mut gif, 128),
-        // Step 3: Lossy compression (quality 80)
-        || apply_lossy_compression(&mut gif, 80),
-        // Step 4: Reduce colors to 64
-        || reduce_colors(&mut gif, 64),
-        // Step 5: Lossy compression (quality 60)
-        || apply_lossy_compression(&mut gif, 60),
-        // Step 6: Reduce colors to 32
-        || reduce_colors(&mut gif, 32),
-        // Step 7: Lossy compression (quality 40)
-        || apply_lossy_compression(&mut gif, 40),
-        // Step 8: Frame deduplication (threshold 5)
-        || deduplicate_frames(&mut gif, 5),
-        // Step 9: Reduce colors to 16
-        || reduce_colors(&mut gif, 16),
-        // Step 10: Reduce frame count to 70%
-        || reduce_frame_count(&mut gif, 0.7),
-    ];
+    let temp_path = format!("{}.temp", output);
 
-    let mut temp_path = format!("{}.temp", output);
-
-    for (step_num, step_fn) in compression_steps.iter().enumerate() {
+    for step_num in 0..10 {
         println!("   Applying compression step {}...", step_num + 1);
 
-        // Apply the compression step
-        step_fn()
-            .with_context(|| format!("Failed to apply compression step {}", step_num + 1))?;
+        // Apply the appropriate compression step
+        match step_num {
+            0 => deduplicate_frames(&mut gif, 10)?,
+            1 => reduce_colors(&mut gif, 128)?,
+            2 => apply_lossy_compression(&mut gif, 80)?,
+            3 => reduce_colors(&mut gif, 64)?,
+            4 => apply_lossy_compression(&mut gif, 60)?,
+            5 => reduce_colors(&mut gif, 32)?,
+            6 => apply_lossy_compression(&mut gif, 40)?,
+            7 => deduplicate_frames(&mut gif, 5)?,
+            8 => reduce_colors(&mut gif, 16)?,
+            9 => reduce_frame_count(&mut gif, 0.7)?,
+            _ => break,
+        }
 
         // Save to temp file and check size
         gif.to_file(&temp_path)
             .context("Failed to write temporary GIF")?;
 
         let current_size = fs::metadata(&temp_path)?.len();
-        println!("   Current size after step {}: {} bytes", step_num + 1, current_size);
+        println!(
+            "   Current size after step {}: {} bytes",
+            step_num + 1,
+            current_size
+        );
 
         // Check if we've reached the target
         if current_size <= target_size {
@@ -90,8 +81,7 @@ pub fn run(input: &str, output: &str, target_percent: u8) -> Result<()> {
     }
 
     // Rename temp file to output
-    fs::rename(&temp_path, output)
-        .context("Failed to rename temporary file")?;
+    fs::rename(&temp_path, output).context("Failed to rename temporary file")?;
 
     let final_size = fs::metadata(output)?.len();
     let compression_ratio = ((original_size - final_size) as f64 / original_size as f64) * 100.0;
@@ -120,10 +110,10 @@ fn calculate_frame_difference(frame1: &Frame, frame2: &Frame) -> u8 {
     // Compare RGBA pixels
     for (p1, p2) in frame1.data.chunks(4).zip(frame2.data.chunks(4)) {
         // Calculate per-channel difference
-        let r_diff = (p1[0] as i16 - p2[0] as i16).abs() as u64;
-        let g_diff = (p1[1] as i16 - p2[1] as i16).abs() as u64;
-        let b_diff = (p1[2] as i16 - p2[2] as i16).abs() as u64;
-        let a_diff = (p1[3] as i16 - p2[3] as i16).abs() as u64;
+        let r_diff = (p1[0] as i16 - p2[0] as i16).unsigned_abs() as u64;
+        let g_diff = (p1[1] as i16 - p2[1] as i16).unsigned_abs() as u64;
+        let b_diff = (p1[2] as i16 - p2[2] as i16).unsigned_abs() as u64;
+        let a_diff = (p1[3] as i16 - p2[3] as i16).unsigned_abs() as u64;
 
         // Average difference across channels
         total_diff += (r_diff + g_diff + b_diff + a_diff) / 4;
@@ -167,7 +157,11 @@ fn deduplicate_frames(gif: &mut Gif, threshold: u8) -> Result<()> {
     let original_count = gif.frames.len();
     gif.frames = unique_frames;
 
-    println!("      Deduplicated: {} -> {} frames", original_count, gif.frames.len());
+    println!(
+        "      Deduplicated: {} -> {} frames",
+        original_count,
+        gif.frames.len()
+    );
 
     Ok(())
 }
@@ -198,8 +192,11 @@ fn reduce_colors(gif: &mut Gif, max_colors: usize) -> Result<()> {
         return Ok(());
     }
 
+    // Flatten color data for color_quant
+    let flat_colors: Vec<u8> = all_colors.iter().flatten().copied().collect();
+
     // Use color_quant to create optimized palette
-    let quantizer = color_quant::NeuQuant::new(10, max_colors, &all_colors);
+    let quantizer = color_quant::NeuQuant::new(10, max_colors, &flat_colors);
     let palette = quantizer.color_map_rgb();
 
     // Apply the palette to all frames
@@ -211,19 +208,20 @@ fn reduce_colors(gif: &mut Gif, max_colors: usize) -> Result<()> {
                 let b = pixel[2];
 
                 // Get the closest color from the palette
-                let [nr, ng, nb] = palette
+                let fallback = [r, g, b];
+                let closest = palette
                     .chunks(3)
                     .min_by_key(|color| {
-                        let dr = (color[0] as i32 - r as i32).abs();
-                        let dg = (color[1] as i32 - g as i32).abs();
-                        let db = (color[2] as i32 - b as i32).abs();
+                        let dr = (color.first().copied().unwrap_or(0) as i32 - r as i32).abs();
+                        let dg = (color.get(1).copied().unwrap_or(0) as i32 - g as i32).abs();
+                        let db = (color.get(2).copied().unwrap_or(0) as i32 - b as i32).abs();
                         dr + dg + db
                     })
-                    .unwrap_or(&[r, g, b]);
+                    .unwrap_or(&fallback);
 
-                pixel[0] = nr;
-                pixel[1] = ng;
-                pixel[2] = nb;
+                pixel[0] = closest.first().copied().unwrap_or(r);
+                pixel[1] = closest.get(1).copied().unwrap_or(g);
+                pixel[2] = closest.get(2).copied().unwrap_or(b);
             }
         }
     }
@@ -243,7 +241,7 @@ fn apply_lossy_compression(gif: &mut Gif, quality: u8) -> Result<()> {
 
     // Calculate the quantization factor
     // Lower quality = larger factor = more aggressive compression
-    let factor = (100 - quality) as u8;
+    let factor = 100 - quality;
     if factor == 0 {
         return Ok(());
     }
@@ -276,7 +274,11 @@ fn reduce_frame_count(gif: &mut Gif, percentage: f64) -> Result<()> {
         return Ok(());
     }
 
-    println!("      Reducing frames: {} -> {}", gif.frames.len(), target_count);
+    println!(
+        "      Reducing frames: {} -> {}",
+        gif.frames.len(),
+        target_count
+    );
 
     // Calculate step size
     let step = gif.frames.len() as f64 / target_count as f64;
@@ -318,7 +320,7 @@ mod tests {
 
     #[test]
     fn test_calculate_frame_difference() {
-        use gif_toolkit::core::Frame;
+        use crate::core::Frame;
 
         // Create two identical frames
         let data = vec![255u8; 10 * 10 * 4];

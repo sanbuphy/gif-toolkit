@@ -35,11 +35,16 @@ fn main() -> anyhow::Result<()> {
     println!("  Dimensions: {}x{}", gif.width, gif.height);
     println!("  Frames: {}", gif.frame_count());
     println!("  Total duration: {} ms", gif.total_duration() * 10);
-    println!("  Loop count: {}",
-        if gif.loop_count == 0 { "Infinite".to_string() }
-        else { gif.loop_count.to_string() }
+    println!(
+        "  Loop count: {}",
+        if gif.loop_count == 0 {
+            "Infinite".to_string()
+        } else {
+            gif.loop_count.to_string()
+        }
     );
-    println!("  Global palette: {}",
+    println!(
+        "  Global palette: {}",
         if gif.global_palette.is_some() {
             format!("{} colors", gif.global_palette.as_ref().unwrap().len())
         } else {
@@ -50,7 +55,8 @@ fn main() -> anyhow::Result<()> {
     // Display frame information
     println!("\nFrame Details:");
     for (i, frame) in gif.frames.iter().enumerate() {
-        println!("  Frame {}: {}x{}, delay: {}ms, transparent: {}",
+        println!(
+            "  Frame {}: {}x{}, delay: {}ms, transparent: {}",
             i + 1,
             frame.width,
             frame.height,

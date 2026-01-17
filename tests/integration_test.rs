@@ -22,8 +22,8 @@ fn test_create_and_save_gif() {
     let mut frame1 = Frame::new(width, height);
     for pixel in frame1.data.chunks_exact_mut(4) {
         pixel[0] = 255; // R
-        pixel[1] = 0;   // G
-        pixel[2] = 0;   // B
+        pixel[1] = 0; // G
+        pixel[2] = 0; // B
         pixel[3] = 255; // A
     }
     frame1.delay = 10; // 100ms
@@ -32,9 +32,9 @@ fn test_create_and_save_gif() {
     // Frame 2: Green
     let mut frame2 = Frame::new(width, height);
     for pixel in frame2.data.chunks_exact_mut(4) {
-        pixel[0] = 0;   // R
+        pixel[0] = 0; // R
         pixel[1] = 255; // G
-        pixel[2] = 0;   // B
+        pixel[2] = 0; // B
         pixel[3] = 255; // A
     }
     frame2.delay = 10; // 100ms
@@ -43,8 +43,8 @@ fn test_create_and_save_gif() {
     // Frame 3: Blue
     let mut frame3 = Frame::new(width, height);
     for pixel in frame3.data.chunks_exact_mut(4) {
-        pixel[0] = 0;   // R
-        pixel[1] = 0;   // G
+        pixel[0] = 0; // R
+        pixel[1] = 0; // G
         pixel[2] = 255; // B
         pixel[3] = 255; // A
     }
@@ -73,9 +73,9 @@ fn test_create_and_save_gif() {
 fn test_frame_from_rgba() {
     // Create RGBA data for a 2x2 image
     let data = vec![
-        255, 0, 0, 255,    // Red pixel
-        0, 255, 0, 255,    // Green pixel
-        0, 0, 255, 255,    // Blue pixel
+        255, 0, 0, 255, // Red pixel
+        0, 255, 0, 255, // Green pixel
+        0, 0, 255, 255, // Blue pixel
         255, 255, 255, 255, // White pixel
     ];
 
@@ -87,8 +87,8 @@ fn test_frame_from_rgba() {
 
     // Verify pixel values
     assert_eq!(frame.data[0], 255); // R of first pixel
-    assert_eq!(frame.data[1], 0);   // G of first pixel
-    assert_eq!(frame.data[2], 0);   // B of first pixel
+    assert_eq!(frame.data[1], 0); // G of first pixel
+    assert_eq!(frame.data[2], 0); // B of first pixel
     assert_eq!(frame.data[3], 255); // A of first pixel
 }
 
