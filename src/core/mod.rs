@@ -1,7 +1,7 @@
 // Core GIF processing functionality
 
 use anyhow::{Context, Result};
-use gif::{Encoder, Frame as GifFrame, Repeat};
+use gif::{Encoder, Frame as GifFrame, Repeat, DisposalMethod};
 use std::fs::File;
 use std::io::{BufReader, BufWriter};
 
@@ -18,6 +18,8 @@ pub struct Frame {
     pub delay: u16,
     /// Whether this frame has transparency
     pub transparent: bool,
+    /// Disposal method for this frame
+    pub disposal: DisposalMethod,
 }
 
 impl Frame {
@@ -30,6 +32,7 @@ impl Frame {
             height,
             delay: 10, // Default 100ms delay
             transparent: false,
+            disposal: DisposalMethod::Keep,
         }
     }
 
@@ -44,6 +47,7 @@ impl Frame {
             height,
             delay: 10,
             transparent: false,
+            disposal: DisposalMethod::Keep,
         }
     }
 
@@ -141,12 +145,16 @@ impl Gif {
             let frame_width = frame_info.width;
             let frame_height = frame_info.height;
 
+            // Get disposal method (default to Keep if not specified)
+            let disposal = frame_info.dispose;
+
             let frame = Frame {
                 data,
                 width: frame_width,
                 height: frame_height,
                 delay: frame_info.delay.max(1), // Ensure minimum delay of 1 (10ms)
                 transparent: frame_info.transparent.is_some(),
+                disposal,
             };
 
             frames.push(frame);
@@ -199,8 +207,11 @@ impl Gif {
                 &mut frame.data.clone(),
             );
 
-            // Set delay and transparency
+            // Set delay
             gif_frame.delay = frame.delay.max(1); // Ensure minimum delay
+
+            // Set disposal method to prevent flicker
+            gif_frame.dispose = frame.disposal;
 
             // If frame is smaller than GIF, center it
             if frame.width < self.width || frame.height < self.height {
@@ -208,8 +219,15 @@ impl Gif {
                 gif_frame.left = (self.width - frame.width) / 2 as u16;
             }
 
+            // Set transparent color if needed
             if frame.transparent {
-                gif_frame.transparent = Some(0);
+                // Find first transparent pixel to get the index
+                for i in (3..frame.data.len()).step_by(4) {
+                    if frame.data[i] == 0 {
+                        gif_frame.transparent = Some((i / 4) as u8);
+                        break;
+                    }
+                }
             }
 
             encoder

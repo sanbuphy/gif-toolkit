@@ -38,6 +38,8 @@ pub fn run(input: &str, output: &str, target_percent: u8) -> Result<()> {
     // Apply iterative compression strategy
     let temp_path = format!("{}.temp", output);
 
+    let mut final_step_reached = false;
+
     for step_num in 0..10 {
         println!("   Applying compression step {}...", step_num + 1);
 
@@ -45,14 +47,14 @@ pub fn run(input: &str, output: &str, target_percent: u8) -> Result<()> {
         match step_num {
             0 => deduplicate_frames(&mut gif, 10)?,
             1 => reduce_colors(&mut gif, 128)?,
-            2 => apply_lossy_compression(&mut gif, 80)?,
-            3 => reduce_colors(&mut gif, 64)?,
-            4 => apply_lossy_compression(&mut gif, 60)?,
-            5 => reduce_colors(&mut gif, 32)?,
-            6 => apply_lossy_compression(&mut gif, 40)?,
-            7 => deduplicate_frames(&mut gif, 5)?,
-            8 => reduce_colors(&mut gif, 16)?,
-            9 => reduce_frame_count(&mut gif, 0.7)?,
+            2 => apply_lossy_compression(&mut gif, 85)?,
+            3 => reduce_colors(&mut gif, 96)?,
+            4 => apply_lossy_compression(&mut gif, 90)?,
+            5 => reduce_colors(&mut gif, 64)?,
+            6 => apply_lossy_compression(&mut gif, 80)?,
+            7 => deduplicate_frames(&mut gif, 8)?,
+            8 => reduce_colors(&mut gif, 48)?,
+            9 => reduce_frame_count(&mut gif, 0.85)?,
             _ => break,
         }
 
@@ -61,15 +63,26 @@ pub fn run(input: &str, output: &str, target_percent: u8) -> Result<()> {
             .context("Failed to write temporary GIF")?;
 
         let current_size = fs::metadata(&temp_path)?.len();
+        let current_percent = (current_size as f64 / original_size as f64) * 100.0;
+
         println!(
-            "   Current size after step {}: {} bytes",
+            "   Current size after step {}: {} bytes ({:.1}%)",
             step_num + 1,
-            current_size
+            current_size,
+            current_percent
         );
 
-        // Check if we've reached the target
+        // Check if we've reached or exceeded the target
         if current_size <= target_size {
             println!("   Target size reached!");
+            final_step_reached = true;
+            break;
+        }
+
+        // Check if we're close to target (within 5%)
+        if current_percent <= target_percent as f64 + 5.0 {
+            println!("   Close to target, stopping for quality");
+            final_step_reached = true;
             break;
         }
 
@@ -78,6 +91,13 @@ pub fn run(input: &str, output: &str, target_percent: u8) -> Result<()> {
             println!("   Size too small, stopping compression");
             break;
         }
+    }
+
+    // If no steps achieved the target, try one more aggressive step
+    if !final_step_reached && fs::metadata(&temp_path)?.len() > target_size {
+        println!("   Applying final aggressive compression...");
+        reduce_colors(&mut gif, 32)?;
+        gif.to_file(&temp_path)?;
     }
 
     // Rename temp file to output
