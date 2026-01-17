@@ -25,6 +25,24 @@ jobs:
         with:
           toolchain: stable
 
+      - name: Cache cargo registry
+        uses: actions/cache@v3
+        with:
+          path: ~/.cargo/registry
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Cache cargo index
+        uses: actions/cache@v3
+        with:
+          path: ~/.cargo/git
+          key: ${{ runner.os }}-cargo-index-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Cache cargo build
+        uses: actions/cache@v3
+        with:
+          path: target
+          key: ${{ runner.os }}-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}
+
       - name: Run tests
         run: cargo test --verbose
 
@@ -45,10 +63,6 @@ jobs:
             target: x86_64-unknown-linux-gnu
             artifact_name: gif-toolkit
             asset_name: gif-toolkit-linux-x64
-          - os: ubuntu-latest
-            target: aarch64-unknown-linux-gnu
-            artifact_name: gif-toolkit
-            asset_name: gif-toolkit-linux-arm64
           - os: windows-latest
             target: x86_64-pc-windows-msvc
             artifact_name: gif-toolkit.exe
@@ -57,10 +71,6 @@ jobs:
             target: x86_64-apple-darwin
             artifact_name: gif-toolkit
             asset_name: gif-toolkit-macos-x64
-          - os: macos-latest
-            target: aarch64-apple-darwin
-            artifact_name: gif-toolkit
-            asset_name: gif-toolkit-macos-arm64
 
     steps:
       - name: Checkout code
@@ -71,6 +81,24 @@ jobs:
         with:
           toolchain: stable
           target: ${{ matrix.target }}
+
+      - name: Cache cargo registry
+        uses: actions/cache@v3
+        with:
+          path: ~/.cargo/registry
+          key: ${{ matrix.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Cache cargo index
+        uses: actions/cache@v3
+        with:
+          path: ~/.cargo/git
+          key: ${{ matrix.os }}-cargo-index-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Cache cargo build
+        uses: actions/cache@v3
+        with:
+          path: target
+          key: ${{ matrix.os }}-${{ matrix.target }}-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}
 
       - name: Build binary
         run: cargo build --release --target ${{ matrix.target }}

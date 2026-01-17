@@ -28,9 +28,6 @@ jobs:
           - os: macos-latest
             target: x86_64-apple-darwin
             asset_name: gif-toolkit-gui-macos-x64
-          - os: macos-latest
-            target: aarch64-apple-darwin
-            asset_name: gif-toolkit-gui-macos-arm64
 
     steps:
       - name: Checkout code
@@ -53,7 +50,7 @@ jobs:
         run: |
           cargo install tauri-cli --version "^1.0.0"
 
-      - name: Build GUI binary
+      - name: Build GUI
         run: |
           cd src-tauri
           cargo tauri build --target ${{ matrix.target }}
@@ -61,8 +58,12 @@ jobs:
       - name: Prepare Linux artifacts
         if: matrix.os == 'ubuntu-latest'
         run: |
-          cd src-tauri/target/${{ matrix.target }}/release/bundle/
-          tar -czf gif-toolkit-gui-linux-x64.tar.gz -C deb/ .
+          cd src-tauri/target/${{ matrix.target }}/release/bundle/deb/
+          for deb in *.deb; do
+            mv "$deb" "../"
+          done
+          cd ..
+          tar -czf gif-toolkit-gui-linux-x64.tar.gz *.deb
 
       - name: Prepare Windows artifacts
         if: matrix.os == 'windows-latest'
@@ -74,9 +75,7 @@ jobs:
         if: matrix.os == 'macos-latest'
         run: |
           cd src-tauri/target/${{ matrix.target }}/release/bundle/dmg/
-          if [ -f *.dmg ]; then
-            zip -r gif-toolkit-gui-macos-x64.zip *.dmg
-          fi
+          zip -r gif-toolkit-gui-macos-x64.zip *.dmg
 
       - name: Upload GUI artifact
         uses: actions/upload-artifact@v4
@@ -84,8 +83,7 @@ jobs:
           name: ${{ matrix.asset_name }}
           path: |
             src-tauri/target/${{ matrix.target }}/release/bundle/*/*
-            gif-toolkit-gui-*.tar.gz
-            gif-toolkit-gui-*.zip
+            gif-toolkit-gui-*.*
 
   release-gui:
     name: Create GUI Release

@@ -570,10 +570,15 @@
 
         // Generate output path
         async function generateOutputPath(inputPath, operation, params) {
-            const path = require('path');
-            const parsed = path.parse(inputPath);
-            let suffix = '';
+            // Simple path manipulation without Node.js require
+            const lastSlash = Math.max(inputPath.lastIndexOf('/'), inputPath.lastIndexOf('\\'));
+            const lastDot = inputPath.lastIndexOf('.');
 
+            const dir = inputPath.substring(0, lastSlash + 1);
+            const name = inputPath.substring(lastSlash + 1, lastDot);
+            const ext = inputPath.substring(lastDot);
+
+            let suffix = '';
             if (operation === 'speed') {
                 suffix = `_speed_${params.factor}x`;
             } else if (operation === 'compress') {
@@ -582,7 +587,7 @@
                 suffix = '_tuned';
             }
 
-            return path.join(parsed.dir, parsed.name + suffix + parsed.ext);
+            return dir + name + suffix + ext;
         }
 
         // Display result

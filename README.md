@@ -11,9 +11,9 @@
 
 </div>
 
-**🚀 Blazing fast, cross-platform GIF optimization and manipulation toolkit**
+**Blazing fast, cross-platform GIF optimization and manipulation toolkit**
 
-[Features](#-features) • [Installation](#-installation) • [Usage](#-usage) • [Documentation](#-documentation) • [Contributing](#-contributing)
+[Features](#features) • [Installation](#installation) • [Usage](#usage) • [Documentation](#-documentation) • [Contributing](#contributing)
 
 **[中文文档](README.zh-CN.md)**
 
@@ -21,19 +21,19 @@
 
 ---
 
-## ✨ Features
+## Features
 
 GIF Toolkit is a powerful, high-performance tool for optimizing and manipulating GIF images. Built with **Rust** for maximum speed and safety.
 
-### 🎯 Core Capabilities
+### Core Capabilities
 
-- ⚡ **Speed Adjustment** - Accelerate or decelerate GIF playback with intelligent frame management
-- 📉 **Smart Compression** - Reduce file size by up to 90% with advanced algorithms
-- 🎛️ **Parameter Tuning** - Resize, crop, and fine-tune GIF properties
-- 📊 **Info Display** - Comprehensive GIF metadata analysis
-- 🔄 **Batch Processing** - Process multiple GIFs efficiently
+- **Speed Adjustment** - Accelerate or decelerate GIF playback with intelligent frame management
+- **Smart Compression** - Reduce file size by up to 90% with advanced algorithms
+- **Parameter Tuning** - Resize, crop, and fine-tune GIF properties
+- **Info Display** - Comprehensive GIF metadata analysis
+- **Batch Processing** - Process multiple GIFs efficiently
 
-### 🌟 Advanced Features
+### Advanced Features
 
 - **Adaptive Compression** - Iterative optimization with quality preservation
 - **Frame Deduplication** - Remove redundant frames automatically
@@ -41,28 +41,28 @@ GIF Toolkit is a powerful, high-performance tool for optimizing and manipulating
 - **Lossy Compression** - Configurable quality settings for maximum compression
 - **Aspect Ratio Preservation** - Smart resizing maintains original proportions
 
-### 🛡️ Quality & Performance
+### Quality & Performance
 
-- ⚡ **Blazing Fast** - Optimized Rust implementation with zero-cost abstractions
-- 💾 **Memory Efficient** - Streamlined processing for large files
-- 🔒 **Safe & Secure** - Rust's memory safety guarantees
-- 🎨 **High Quality** - Lanczos3 resampling for best visual results
-- 📦 **Self-Contained** - No external dependencies required
+- **Blazing Fast** - Optimized Rust implementation with zero-cost abstractions
+- **Memory Efficient** - Streamlined processing for large files
+- **Safe & Secure** - Rust's memory safety guarantees
+- **High Quality** - Lanczos3 resampling for best visual results
+- **Self-Contained** - No external dependencies required
 
 ---
 
-## 📦 Installation
+## Installation
 
 ### Choose Your Version
 
 **GIF Toolkit is available in two versions:**
 
-- 🖥️ **GUI Application** (Desktop app with graphical interface) - Recommended for most users
-- ⌨️ **CLI Tool** (Command-line interface) - For power users and automation
+- **GUI Application** (Desktop app with graphical interface) - Recommended for most users
+- **CLI Tool** (Command-line interface) - For power users and automation
 
 ---
 
-### 🖥️ GUI Application (Recommended)
+### GUI Application (Recommended)
 
 Perfect for users who prefer a visual interface!
 
@@ -76,15 +76,15 @@ Perfect for users who prefer a visual interface!
 | **Linux x64** | `gif-toolkit-gui-linux-x64.tar.gz` |
 
 **Features:**
-- 🎨 Beautiful, intuitive interface
-- 📊 Visual GIF information display
-- 🎛️ Easy-to-use sliders and controls
-- 📈 Real-time statistics
-- 🖱️ Drag-and-drop file support
+- Beautiful, intuitive interface
+- Visual GIF information display
+- Easy-to-use sliders and controls
+- Real-time statistics
+- Drag-and-drop file support
 
 ---
 
-### ⌨️ CLI Tool (Command-Line)
+### CLI Tool (Command-Line)
 
 For power users, scripts, and automation.
 
@@ -143,7 +143,7 @@ cargo tauri build
 
 ---
 
-## 🚀 Usage
+## Usage
 
 ### GUI Application
 
@@ -168,7 +168,7 @@ gif-toolkit <COMMAND> [OPTIONS]
 
 #### Commands
 
-##### 📊 Display GIF Information
+##### Display GIF Information
 
 ```bash
 gif-toolkit info <input>
@@ -194,7 +194,7 @@ GIF Information:
 
 ---
 
-#### ⚡ Adjust GIF Speed
+##### Adjust GIF Speed
 
 ```bash
 gif-toolkit speed <input> <output> --factor <FACTOR>
@@ -219,7 +219,7 @@ gif-toolkit speed slow-mo.gif fast.gif --factor 5.0
 
 ---
 
-#### 📉 Compress GIF
+##### Compress GIF
 
 ```bash
 gif-toolkit compress <input> <output> --percent <PERCENT>
@@ -241,7 +241,7 @@ gif-toolkit compress huge.gif tiny.gif --percent 30
 
 ---
 
-#### 🎛️ Tune GIF Parameters
+##### Tune GIF Parameters
 
 ```bash
 gif-toolkit tune <input> <output> [--width <WIDTH>] [--height <HEIGHT>]
@@ -264,7 +264,7 @@ gif-toolkit tune original.gif resized.gif --width 400
 
 ---
 
-## 📚 Documentation
+## Documentation
 
 - [**Architecture**](ARCHITECTURE.md) - System design and technical details
 - [**Building Guide**](BUILDING.md) - Build instructions for all platforms
@@ -273,7 +273,7 @@ gif-toolkit tune original.gif resized.gif --width 400
 
 ---
 
-## 🏗️ Architecture
+## Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -304,7 +304,7 @@ gif-toolkit tune original.gif resized.gif --width 400
 
 ---
 
-## 🗺️ Roadmap
+## Roadmap
 
 ### v0.2.0 (Current)
 - [x] Core GIF processing engine
@@ -329,7 +329,7 @@ gif-toolkit tune original.gif resized.gif --width 400
 
 ---
 
-## 📊 Performance
+## Performance
 
 | Operation | Input Size | Output Size | Time | Speedup |
 |-----------|-----------|-------------|------|---------|
@@ -341,19 +341,33 @@ gif-toolkit tune original.gif resized.gif --width 400
 
 ---
 
-## 🤝 Contributing
+## Contributing
 
 We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
+### Development Workflow
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+### Code Style
+
+- Format code: `cargo fmt`
+- Lint code: `cargo clippy`
+- Run tests: `cargo test`
+
 ---
 
-## 📝 License
+## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ---
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 Built with amazing open-source projects:
 - [gif](https://github.com/PistonDevelopers/image-gif) - GIF encoding/decoding
@@ -361,11 +375,21 @@ Built with amazing open-source projects:
 - [clap](https://github.com/clap-rs/clap) - Command-line argument parsing
 - [Tauri](https://tauri.app/) - Cross-platform desktop framework
 
+Special thanks to all contributors and users of GIF Toolkit!
+
+---
+
+## Support
+
+- Email: [physicoada@gmail.com](mailto:physicoada@gmail.com)
+- Issues: [GitHub Issues](https://github.com/sanbuphy/gif-toolkit/issues)
+- Discussions: [GitHub Discussions](https://github.com/sanbuphy/gif-toolkit/discussions)
+
 ---
 
 <div align="center">
 
-**Made with ❤️ and Rust**
+**Made with love and Rust**
 
 [⬆ Back to Top](#gif-toolkit)
 
