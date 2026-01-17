@@ -1,0 +1,59 @@
+{
+  "build": {
+    "beforeDevCommand": "",
+    "beforeBuildCommand": "",
+    "devPath": "../index.html",
+    "distDir": "../",
+    "withGlobalTauri": true
+  },
+  "package": {
+    "productName": "GIF Toolkit",
+    "version": "0.1.0"
+  },
+  "tauri": {
+    "allowlist": {
+      "all": false,
+      "shell": {
+        "all": false,
+        "open": true
+      },
+      "dialog": {
+        "all": false,
+        "open": true,
+        "save": true
+      }
+    },
+    "bundle": {
+      "active": true,
+      "targets": "all",
+      "identifier": "com.giftoolkit.app",
+      "icon": [
+        "icons/32x32.png",
+        "icons/128x128.png",
+        "icons/128x128@2x.png",
+        "icons/icon.icns",
+        "icons/icon.ico"
+      ],
+      "category": "Graphics",
+      "shortDescription": "A powerful GIF optimization toolkit",
+      "longDescription": "GIF Toolkit is a powerful cross-platform GIF optimization and manipulation tool with an intuitive graphical interface."
+    },
+    "security": {
+      "csp": null
+    },
+    "updater": {
+      "active": false
+    },
+    "windows": [
+      {
+        "fullscreen": false,
+        "resizable": true,
+        "title": "GIF Toolkit",
+        "width": 900,
+        "height": 700,
+        "minWidth": 700,
+        "minHeight": 500
+      }
+    ]
+  }
+}

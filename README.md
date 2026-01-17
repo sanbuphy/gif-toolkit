@@ -51,17 +51,50 @@ GIF Toolkit is a powerful, high-performance tool for optimizing and manipulating
 
 ## 📦 Installation
 
-### Pre-built Binaries (Recommended)
+### Choose Your Version
 
-Download the latest release for your platform from [GitHub Releases](https://github.com/sanbuphy/gif-toolkit/releases/latest):
+**GIF Toolkit is available in two versions:**
+
+- 🖥️ **GUI Application** (Desktop app with graphical interface) - Recommended for most users
+- ⌨️ **CLI Tool** (Command-line interface) - For power users and automation
+
+---
+
+### 🖥️ GUI Application (Recommended)
+
+Perfect for users who prefer a visual interface!
+
+**Download from [GitHub Releases](https://github.com/sanbuphy/gif-toolkit/releases/latest)**
 
 | Platform | Download |
 |----------|----------|
-| **Windows x64** | [gif-toolkit-windows-x64.exe](https://github.com/sanbuphy/gif-toolkit/releases/latest) |
-| **macOS Intel** | [gif-toolkit-macos-x64](https://github.com/sanbuphy/gif-toolkit/releases/latest) |
-| **macOS Apple Silicon** | [gif-toolkit-macos-arm64](https://github.com/sanbuphy/gif-toolkit/releases/latest) |
-| **Linux x64** | [gif-toolkit-linux-x64](https://github.com/sanbuphy/gif-toolkit/releases/latest) |
-| **Linux ARM64** | [gif-toolkit-linux-arm64](https://github.com/sanbuphy/gif-toolkit/releases/latest) |
+| **Windows x64** | `gif-toolkit-gui-windows-x64.zip` |
+| **macOS Intel** | `gif-toolkit-gui-macos-x64.zip` |
+| **macOS Apple Silicon** | `gif-toolkit-gui-macos-arm64.zip` |
+| **Linux x64** | `gif-toolkit-gui-linux-x64.tar.gz` |
+
+**Features:**
+- 🎨 Beautiful, intuitive interface
+- 📊 Visual GIF information display
+- 🎛️ Easy-to-use sliders and controls
+- 📈 Real-time statistics
+- 🖱️ Drag-and-drop file support
+
+---
+
+### ⌨️ CLI Tool (Command-Line)
+
+For power users, scripts, and automation.
+
+**Download from [GitHub Releases](https://github.com/sanbuphy/gif-toolkit/releases/latest)**
+
+| Platform | Download |
+|----------|----------|
+| **Windows x64** | `gif-toolkit-windows-x64.exe` |
+| **macOS Intel** | `gif-toolkit-macos-x64` |
+| **macOS Apple Silicon** | `gif-toolkit-macos-arm64` |
+| **Linux x64** | `gif-toolkit-linux-x64` |
+| **Linux ARM64** | `gif-toolkit-linux-arm64` |
 
 #### macOS Note
 

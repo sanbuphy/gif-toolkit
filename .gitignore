@@ -33,6 +33,11 @@ tests/output/
 *.test.gif
 tests/fixtures/*.tmp
 
+# Tauri GUI
+src-tauri/target/
+src-tauri/Cargo.lock
+index.html.bak
+
 # Distribution
 *.tar.gz
 *.zip
