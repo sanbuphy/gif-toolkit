@@ -183,6 +183,13 @@ impl Gif {
             Vec::new()
         };
 
+        // Extract background color from palette (palette[0] is typically background)
+        let background_color = if !global_palette.is_empty() && global_palette.len() >= 3 {
+            Some([global_palette[0], global_palette[1], global_palette[2], 255])
+        } else {
+            None // Default to white if no palette
+        };
+
         // Create encoder
         let mut encoder = Encoder::new(writer, self.width, self.height, &global_palette)
             .with_context(|| format!("Failed to create GIF encoder for: {}", path))?;
@@ -210,25 +217,20 @@ impl Gif {
             // Set delay
             gif_frame.delay = frame.delay.max(1); // Ensure minimum delay
 
-            // Set disposal method to prevent flicker
-            gif_frame.dispose = frame.disposal;
+            // CRITICAL: Use Background disposal for normalized frames
+            // When frames are normalized to full size, each frame contains its complete content
+            // We need to clear the canvas before each frame to prevent accumulation/ghosting
+            gif_frame.dispose = DisposalMethod::Background;
 
             // If frame is smaller than GIF, center it
             if frame.width < self.width || frame.height < self.height {
-                gif_frame.top = (self.height - frame.height) / 2 as u16;
-                gif_frame.left = (self.width - frame.width) / 2 as u16;
+                gif_frame.top = (self.height - frame.height) / 2;
+                gif_frame.left = (self.width - frame.width) / 2;
             }
 
-            // Set transparent color if needed
-            if frame.transparent {
-                // Find first transparent pixel to get the index
-                for i in (3..frame.data.len()).step_by(4) {
-                    if frame.data[i] == 0 {
-                        gif_frame.transparent = Some((i / 4) as u8);
-                        break;
-                    }
-                }
-            }
+            // Note: Don't manually set transparent color index
+            // GifFrame::from_rgba handles transparency correctly by converting
+            // RGBA pixels with alpha=0 to transparent palette entries
 
             encoder
                 .write_frame(&gif_frame)

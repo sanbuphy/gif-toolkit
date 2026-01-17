@@ -59,8 +59,9 @@ pub fn run(input: &str, output: &str, width: Option<u32>, height: Option<u32>) -
     // Resize all frames
     for frame in &mut gif.frames {
         let img_buffer = frame.to_image_buffer();
+        // Use Triangle filter for smoother edges without ringing artifacts
         let resized =
-            image::imageops::resize(&img_buffer, new_width, new_height, FilterType::Lanczos3);
+            image::imageops::resize(&img_buffer, new_width, new_height, FilterType::Triangle);
         frame.update_from_image_buffer(&resized);
     }
 

@@ -2,6 +2,85 @@ use crate::core::{Frame, Gif};
 use anyhow::{Context, Result};
 use std::fs;
 
+/// Normalize all frames to full GIF dimensions
+///
+/// Fill transparent areas with background color to prevent flickering with Background disposal
+fn normalize_frames(gif: &mut Gif) -> Result<()> {
+    if gif.frames.is_empty() {
+        return Ok(());
+    }
+
+    // Calculate expected full frame size
+    let full_frame_size = (gif.width as usize) * (gif.height as usize) * 4;
+
+    // Check if any frame needs normalization
+    let needs_normalization = gif.frames.iter().any(|f| f.data.len() < full_frame_size);
+
+    if !needs_normalization {
+        return Ok(());
+    }
+
+    println!("      Normalizing frames to full dimensions...");
+
+    // Get background color from global palette
+    let bg_color: u8 = if let Some(palette) = &gif.global_palette {
+        if !palette.is_empty() {
+            palette[0][0]  // palette[0] is [u8; 3], we need the first byte (R)
+        } else {
+            255  // Default to white
+        }
+    } else {
+        255  // Default to white
+    };
+
+    // Apply normalization to all frames
+    for frame in &mut gif.frames {
+        // Check if this is a partial frame
+        if frame.data.len() < full_frame_size {
+            // Create a full-size canvas filled with background color
+            let mut canvas: Vec<u8> = vec![bg_color; full_frame_size];
+
+            // Calculate offset to center the partial frame
+            let offset_x = ((gif.width - frame.width) / 2) as usize;
+            let offset_y = ((gif.height - frame.height) / 2) as usize;
+
+            let frame_stride = (frame.width as usize) * 4;
+            let canvas_stride = (gif.width as usize) * 4;
+
+            // Copy the partial frame to the center of the canvas
+            for y in 0..(frame.height as usize) {
+                let frame_row_start = y * frame_stride;
+                let canvas_row_start = (offset_y * canvas_stride) + (offset_x * 4);
+
+                // Copy pixel data
+                let row_bytes = frame.width as usize * 4;
+                if frame_row_start + row_bytes <= frame.data.len()
+                    && canvas_row_start + row_bytes <= canvas.len() {
+                    // Iterate over pixels, not bytes
+                    for x in 0..frame.width as usize {
+                        let pixel_offset = x * 4;
+                        let src_alpha = frame.data[frame_row_start + pixel_offset + 3];
+                        if src_alpha > 0 {
+                            // Copy all 4 channels
+                            for c in 0..4 {
+                                canvas[canvas_row_start + pixel_offset + c] = frame.data[frame_row_start + pixel_offset + c];
+                            }
+                        }
+                        // Keep background color if transparent
+                    }
+                }
+            }
+
+            // Replace frame data with the filled canvas
+            frame.data = canvas;
+            frame.width = gif.width;
+            frame.height = gif.height;
+        }
+    }
+
+    Ok(())
+}
+
 /// Compress GIF file size by the given percentage
 ///
 /// # Arguments
@@ -35,6 +114,46 @@ pub fn run(input: &str, output: &str, target_percent: u8) -> Result<()> {
     println!("   Original size: {} bytes", original_size);
     println!("   Target size: {} bytes", target_size);
 
+    // Determine compression strategy based on target
+    // IMPORTANT: Use 256 colors for ALL targets to prevent color shift (色差)
+    // Only use lossy compression and other methods to reduce size
+    let (_skip_dedup, initial_colors, lossy_quality, apply_steps, skip_normalize) = if target_percent >= 90 {
+        // Maximum quality - skip normalization entirely
+        (true, 256, 100, false, true)
+    } else if target_percent >= 80 {
+        // Very high quality - skip normalization
+        (true, 256, 98, false, true)
+    } else if target_percent >= 70 {
+        // High quality - skip normalization
+        (true, 256, 96, true, true)
+    } else if target_percent >= 60 {
+        // Good quality - skip normalization
+        (true, 256, 94, true, true)
+    } else if target_percent >= 50 {
+        // Medium-high quality - skip normalization
+        (true, 256, 92, true, true)
+    } else if target_percent >= 40 {
+        // Medium quality - NO color quantization to avoid color shift
+        (true, 256, 90, true, true)
+    } else if target_percent >= 30 {
+        // Medium-low quality - NO color quantization
+        (true, 256, 88, true, true)
+    } else if target_percent >= 20 {
+        // Low quality - NO color quantization
+        (true, 256, 85, true, true)
+    } else {
+        // Very low quality - NO color quantization, only lossy compression
+        (true, 256, 82, true, true)
+    };
+
+    // Normalize frames to full dimensions BEFORE compression
+    // For high quality targets, skip normalization to preserve original quality
+    if skip_normalize {
+        println!("   Skipping frame normalization to preserve quality");
+    } else {
+        normalize_frames(&mut gif)?;
+    }
+
     // Apply iterative compression strategy
     let temp_path = format!("{}.temp", output);
 
@@ -43,18 +162,68 @@ pub fn run(input: &str, output: &str, target_percent: u8) -> Result<()> {
     for step_num in 0..10 {
         println!("   Applying compression step {}...", step_num + 1);
 
-        // Apply the appropriate compression step
+        // Apply the appropriate compression step based on target
         match step_num {
-            0 => deduplicate_frames(&mut gif, 10)?,
-            1 => reduce_colors(&mut gif, 128)?,
-            2 => apply_lossy_compression(&mut gif, 85)?,
-            3 => reduce_colors(&mut gif, 96)?,
-            4 => apply_lossy_compression(&mut gif, 90)?,
-            5 => reduce_colors(&mut gif, 64)?,
-            6 => apply_lossy_compression(&mut gif, 80)?,
-            7 => deduplicate_frames(&mut gif, 8)?,
-            8 => reduce_colors(&mut gif, 48)?,
-            9 => reduce_frame_count(&mut gif, 0.85)?,
+            0 => {
+                println!("      Frame deduplication disabled to preserve animation");
+            }
+            1 => {
+                if initial_colors < 256 {
+                    reduce_colors(&mut gif, initial_colors)?;
+                } else {
+                    println!("      Skipping color reduction (already optimal)");
+                }
+            }
+            2 => {
+                if lossy_quality < 100 {
+                    apply_lossy_compression(&mut gif, lossy_quality)?;
+                } else {
+                    println!("      Skipping lossy compression (lossless mode)");
+                }
+            }
+            3 => {
+                // Additional color reduction based on target
+                // IMPORTANT: Keep 256 colors for all targets to avoid color shift
+                let next_colors = if target_percent >= 70 {
+                    256 // Keep max colors for 70%+
+                } else if target_percent >= 60 {
+                    256 // Keep max colors for 60%+ to avoid color shift
+                } else if target_percent >= 50 {
+                    256 // Keep max colors for 50%+ to avoid color shift
+                } else if target_percent >= 40 {
+                    256 // Keep max colors for 40%+ to avoid color shift
+                } else if target_percent >= 30 {
+                    256 // Keep max colors for 30%+ to avoid color shift
+                } else if target_percent >= 20 {
+                    256 // Keep max colors for 20%+ to avoid color shift
+                } else {
+                    256 // Keep max colors for 10% to avoid color shift
+                };
+
+                if next_colors < initial_colors {
+                    reduce_colors(&mut gif, next_colors)?;
+                } else {
+                    println!("      Skipping color reduction (preserving original colors)");
+                }
+            }
+            4 => {
+                // Additional lossy compression based on target
+                if target_percent < 90 && lossy_quality > 80 {
+                    let additional_quality = if target_percent >= 80 {
+                        lossy_quality // Keep same for 80%+
+                    } else if target_percent >= 70 {
+                        lossy_quality.saturating_sub(2)
+                    } else if target_percent >= 60 {
+                        lossy_quality.saturating_sub(4)
+                    } else {
+                        lossy_quality.saturating_sub(6)
+                    };
+
+                    if additional_quality < lossy_quality {
+                        apply_lossy_compression(&mut gif, additional_quality)?;
+                    }
+                }
+            }
             _ => break,
         }
 
@@ -74,29 +243,58 @@ pub fn run(input: &str, output: &str, target_percent: u8) -> Result<()> {
 
         // Check if we've reached or exceeded the target
         if current_size <= target_size {
-            println!("   Target size reached!");
-            final_step_reached = true;
-            break;
+            // For very low targets, stop early
+            if target_percent < 15 {
+                println!("   Target size reached!");
+                final_step_reached = true;
+                break;
+            }
         }
 
-        // Check if we're close to target (within 5%)
-        if current_percent <= target_percent as f64 + 5.0 {
-            println!("   Close to target, stopping for quality");
-            final_step_reached = true;
-            break;
+        // For higher quality targets (90%+), stop if we're close to original size
+        if target_percent >= 90 {
+            // Stop if within 10% of target or after step 3
+            if current_percent <= target_percent as f64 + 10.0 || step_num >= 3 {
+                println!("   Close to target, stopping for quality");
+                final_step_reached = true;
+                break;
+            }
+        } else if target_percent >= 70 {
+            // Continue compressing to apply quality settings
+            if current_percent <= target_percent as f64 + 15.0 && step_num >= 3 {
+                println!("   Close to target, stopping for quality");
+                final_step_reached = true;
+                break;
+            }
+        } else if target_percent >= 40 {
+            if current_percent >= target_percent as f64 - 5.0 && current_percent <= target_percent as f64 + 10.0 {
+                println!("   Close to target, stopping for quality");
+                final_step_reached = true;
+                break;
+            }
+        } else {
+            // For low quality targets, stop when close
+            if current_percent <= target_percent as f64 + 5.0 {
+                println!("   Close to target, stopping for quality");
+                final_step_reached = true;
+                break;
+            }
         }
 
-        // If we're getting too small, stop
-        if current_size < target_size / 2 {
+        // If we're getting too small (less than 50% of target), stop
+        if current_size < target_size / 2 && target_percent > 20 {
             println!("   Size too small, stopping compression");
             break;
         }
     }
 
     // If no steps achieved the target, try one more aggressive step
-    if !final_step_reached && fs::metadata(&temp_path)?.len() > target_size {
+    // But skip this for high quality targets (70%+) to preserve quality
+    // IMPORTANT: Use stronger lossy compression instead of color reduction to avoid color shift
+    if !final_step_reached && fs::metadata(&temp_path)?.len() > target_size && target_percent < 70 {
         println!("   Applying final aggressive compression...");
-        reduce_colors(&mut gif, 32)?;
+        // Use stronger lossy compression instead of reducing colors
+        apply_lossy_compression(&mut gif, 70)?;
         gif.to_file(&temp_path)?;
     }
 
@@ -104,10 +302,18 @@ pub fn run(input: &str, output: &str, target_percent: u8) -> Result<()> {
     fs::rename(&temp_path, output).context("Failed to rename temporary file")?;
 
     let final_size = fs::metadata(output)?.len();
-    let compression_ratio = ((original_size - final_size) as f64 / original_size as f64) * 100.0;
+    let compression_ratio = if final_size < original_size {
+        ((original_size - final_size) as f64 / original_size as f64) * 100.0
+    } else {
+        -((final_size - original_size) as f64 / original_size as f64) * 100.0
+    };
 
     println!("   Final size: {} bytes", final_size);
-    println!("   Compression achieved: {:.1}%", compression_ratio);
+    if compression_ratio >= 0.0 {
+        println!("   Compression achieved: {:.1}%", compression_ratio);
+    } else {
+        println!("   Size increased: {:.1}%", -compression_ratio);
+    }
 
     Ok(())
 }

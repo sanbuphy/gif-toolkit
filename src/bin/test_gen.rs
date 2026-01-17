@@ -3,7 +3,7 @@
 // This binary generates test GIF files for testing the GIF Toolkit
 
 use anyhow::Result;
-use gif::{Encoder, Frame, Repeat, SetParameter};
+use gif::{Encoder, Frame, Repeat};
 use std::fs::File;
 use std::io::BufWriter;
 use std::path::Path;
@@ -40,7 +40,14 @@ fn generate_simple_gif(dir: &str) -> Result<()> {
     let width = 100;
     let height = 100;
 
-    let mut encoder = Encoder::new(writer, width, height, &[])?;
+    // Create a simple palette: black (index 0), red (index 1), blue (index 2)
+    let palette = vec![
+        0, 0, 0,    // Index 0: Black (background)
+        255, 0, 0,  // Index 1: Red
+        0, 0, 255,  // Index 2: Blue
+    ];
+
+    let mut encoder = Encoder::new(writer, width, height, &palette)?;
     encoder.set_repeat(Repeat::Infinite)?;
 
     // Frame 1: Red square
@@ -51,7 +58,7 @@ fn generate_simple_gif(dir: &str) -> Result<()> {
         }
     }
 
-    let mut frame1 = Frame::from_indexed_pixels(width, height, &frame1_data, &[255, 0, 0, 0, 0, 0]);
+    let mut frame1 = Frame::from_indexed_pixels(width, height, &frame1_data, None);
     frame1.delay = 20; // 0.2 seconds
     encoder.write_frame(&frame1)?;
 
@@ -59,11 +66,11 @@ fn generate_simple_gif(dir: &str) -> Result<()> {
     let mut frame2_data = vec![0u8; width as usize * height as usize];
     for y in 20..80 {
         for x in 20..80 {
-            frame2_data[y as usize * width as usize + x as usize] = 1; // Index of blue in palette
+            frame2_data[y as usize * width as usize + x as usize] = 2; // Index of blue in palette
         }
     }
 
-    let mut frame2 = Frame::from_indexed_pixels(width, height, &frame2_data, &[0, 0, 255, 0, 0, 0]);
+    let mut frame2 = Frame::from_indexed_pixels(width, height, &frame2_data, None);
     frame2.delay = 20; // 0.2 seconds
     encoder.write_frame(&frame2)?;
 
@@ -82,9 +89,6 @@ fn generate_colorful_gif(dir: &str) -> Result<()> {
     let width = 200;
     let height = 200;
 
-    let mut encoder = Encoder::new(writer, width, height, &[])?;
-    encoder.set_repeat(Repeat::Infinite)?;
-
     // Create a rainbow palette
     let mut palette = vec![0u8; 256 * 3];
     for i in 0..256 {
@@ -94,6 +98,9 @@ fn generate_colorful_gif(dir: &str) -> Result<()> {
         palette[i * 3 + 1] = rgb.1;
         palette[i * 3 + 2] = rgb.2;
     }
+
+    let mut encoder = Encoder::new(writer, width, height, &palette)?;
+    encoder.set_repeat(Repeat::Infinite)?;
 
     // Generate 10 frames with different colors
     for frame_num in 0..10 {
@@ -109,7 +116,7 @@ fn generate_colorful_gif(dir: &str) -> Result<()> {
             for x in 0..width {
                 let dx = x as i32 - center_x;
                 let dy = y as i32 - center_y;
-                let dist = (dx * dx + dy * dy).sqrt();
+                let dist = ((dx * dx + dy * dy) as f64).sqrt();
 
                 if dist < 40.0 {
                     frame_data[y as usize * width as usize + x as usize] = color_index as u8;
@@ -117,7 +124,7 @@ fn generate_colorful_gif(dir: &str) -> Result<()> {
             }
         }
 
-        let mut frame = Frame::from_indexed_pixels(width, height, &frame_data, &palette);
+        let mut frame = Frame::from_indexed_pixels(width, height, &frame_data, None);
         frame.delay = 10; // 0.1 seconds
         encoder.write_frame(&frame)?;
     }
@@ -137,10 +144,10 @@ fn generate_large_gif(dir: &str) -> Result<()> {
     let width = 800;
     let height = 600;
 
-    let mut encoder = Encoder::new(writer, width, height, &[])?;
-    encoder.set_repeat(Repeat::Infinite)?;
-
     let palette = [255, 0, 0, 0, 255, 0, 0, 0, 255, 255, 255, 0];
+
+    let mut encoder = Encoder::new(writer, width, height, &palette)?;
+    encoder.set_repeat(Repeat::Infinite)?;
 
     // Create 5 frames with different colored rectangles
     for frame_num in 0..5 {
@@ -159,7 +166,7 @@ fn generate_large_gif(dir: &str) -> Result<()> {
             }
         }
 
-        let mut frame = Frame::from_indexed_pixels(width, height, &frame_data, &palette);
+        let mut frame = Frame::from_indexed_pixels(width, height, &frame_data, None);
         frame.delay = 30; // 0.3 seconds
         encoder.write_frame(&frame)?;
     }
@@ -179,10 +186,10 @@ fn generate_duplicates_gif(dir: &str) -> Result<()> {
     let width = 150;
     let height = 150;
 
-    let mut encoder = Encoder::new(writer, width, height, &[])?;
-    encoder.set_repeat(Repeat::Infinite)?;
-
     let palette = [255, 0, 0, 0, 255, 0, 0, 0, 255, 128, 128, 128];
+
+    let mut encoder = Encoder::new(writer, width, height, &palette)?;
+    encoder.set_repeat(Repeat::Infinite)?;
 
     // Create a frame
     let create_frame = |color: u8| -> Vec<u8> {
@@ -199,31 +206,31 @@ fn generate_duplicates_gif(dir: &str) -> Result<()> {
 
     // Frame 1: Red
     let frame1_data = create_frame(1);
-    let mut frame1 = Frame::from_indexed_pixels(width, height, &frame1_data, &palette);
+    let mut frame1 = Frame::from_indexed_pixels(width, height, &frame1_data, None);
     frame1.delay = 10;
     encoder.write_frame(&frame1)?;
 
     // Frame 2: Same as frame 1 (duplicate)
     let frame2_data = frame1_data.clone();
-    let mut frame2 = Frame::from_indexed_pixels(width, height, &frame2_data, &palette);
+    let mut frame2 = Frame::from_indexed_pixels(width, height, &frame2_data, None);
     frame2.delay = 10;
     encoder.write_frame(&frame2)?;
 
     // Frame 3: Same as frame 1 (duplicate)
     let frame3_data = frame1_data.clone();
-    let mut frame3 = Frame::from_indexed_pixels(width, height, &frame3_data, &palette);
+    let mut frame3 = Frame::from_indexed_pixels(width, height, &frame3_data, None);
     frame3.delay = 10;
     encoder.write_frame(&frame3)?;
 
     // Frame 4: Green
     let frame4_data = create_frame(2);
-    let mut frame4 = Frame::from_indexed_pixels(width, height, &frame4_data, &palette);
+    let mut frame4 = Frame::from_indexed_pixels(width, height, &frame4_data, None);
     frame4.delay = 10;
     encoder.write_frame(&frame4)?;
 
     // Frame 5: Same as frame 4 (duplicate)
     let frame5_data = frame4_data.clone();
-    let mut frame5 = Frame::from_indexed_pixels(width, height, &frame5_data, &palette);
+    let mut frame5 = Frame::from_indexed_pixels(width, height, &frame5_data, None);
     frame5.delay = 10;
     encoder.write_frame(&frame5)?;
 
@@ -242,10 +249,10 @@ fn generate_high_fps_gif(dir: &str) -> Result<()> {
     let width = 100;
     let height = 100;
 
-    let mut encoder = Encoder::new(writer, width, height, &[])?;
-    encoder.set_repeat(Repeat::Infinite)?;
-
     let palette = [255, 255, 255, 0, 0, 0];
+
+    let mut encoder = Encoder::new(writer, width, height, &palette)?;
+    encoder.set_repeat(Repeat::Infinite)?;
 
     // Create 30 frames at 30 FPS (delay = 3.33 centiseconds ≈ 3)
     for frame_num in 0..30 {
@@ -259,7 +266,7 @@ fn generate_high_fps_gif(dir: &str) -> Result<()> {
             for x in 0..width {
                 let dx = x as i32 - 50;
                 let dy = y as i32 - ball_y as i32;
-                let dist = (dx * dx + dy * dy).sqrt();
+                let dist = ((dx * dx + dy * dy) as f64).sqrt();
 
                 if dist < 10.0 {
                     frame_data[y as usize * width as usize + x as usize] = 1;
@@ -267,7 +274,7 @@ fn generate_high_fps_gif(dir: &str) -> Result<()> {
             }
         }
 
-        let mut frame = Frame::from_indexed_pixels(width, height, &frame_data, &palette);
+        let mut frame = Frame::from_indexed_pixels(width, height, &frame_data, None);
         frame.delay = 3; // ~30 FPS
         encoder.write_frame(&frame)?;
     }
